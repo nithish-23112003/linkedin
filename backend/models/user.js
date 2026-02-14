@@ -40,7 +40,7 @@ const userSchema=new mongoose.Schema({
        type:mongoose.Schema.Types.ObjectId,
         ref:"Post" 
     }],
-    connection:[{
+    connectionId:[{
        type:mongoose.Schema.Types.ObjectId,
         ref:"Connection" 
     }]

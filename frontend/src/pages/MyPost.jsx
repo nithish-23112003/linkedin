@@ -8,7 +8,7 @@ import Navbar from "./Navbar";
 export default function Home() {
   const token = localStorage.getItem("token");
   const userId=localStorage.getItem("userId");
-  const [posts, setPosts] = useState([]);  // Ensure posts is an array
+  const [posts, setPosts] = useState([]); 
   const [likedPosts, setLikedPosts] = useState(new Set());
 
   useEffect(() => {

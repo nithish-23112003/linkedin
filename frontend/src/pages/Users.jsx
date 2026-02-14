@@ -1,120 +1,149 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import "./Users.css";
 import Navbar from "./Navbar";
 import { Link } from "react-router-dom";
+import "./Users.css";
 
 export default function Connections() {
   const userId = localStorage.getItem("userId");
-  const [users, setUsers] = useState([]);
-  const [sentRequests, setSentRequests] = useState([]);
-  const [incomingRequests, setIncomingRequests] = useState([]);
 
-  // Fetch all users and requests
+  const [users, setUsers] = useState([]);
+  const [incoming, setIncoming] = useState([]);
+  const [connections, setConnections] = useState([]);
+
   useEffect(() => {
-    fetchUsers();
-    fetchSentRequests();
-    fetchIncomingRequests();
+    loadAll();
   }, [userId]);
 
-  // Get all users except current
+  const loadAll = () => {
+    fetchUsers();
+    fetchIncoming();
+    fetchConnections();
+  };
+
+  /* ================= USERS ================= */
   const fetchUsers = async () => {
-    try {
-      const res = await axios.get("http://localhost:8080/allUsers");
-      const filtered = res.data.filter((u) => u._id !== userId);
-      setUsers(filtered);
-    } catch (e) {
-      console.error("Error fetching users:", e.message);
-    }
+    const res = await axios.get(
+      `http://localhost:8080/users/${userId}`
+    );
+    setUsers(res.data);
   };
 
-  // Get sent requests
-  const fetchSentRequests = async () => {
-    try {
-      const res = await axios.get(`http://localhost:8080/allRequest/${userId}`);
-      const receiverIds = res.data.map((r) => r.receiver._id);
-      setSentRequests(receiverIds);
-    } catch (e) {
-      console.error("Error fetching sent requests:", e.message);
-    }
+  /* ================= INCOMING ================= */
+  const fetchIncoming = async () => {
+    const res = await axios.get(
+      `http://localhost:8080/incoming/${userId}`
+    );
+    setIncoming(res.data);
   };
 
-  // Get incoming requests
-  const fetchIncomingRequests = async () => {
-    try {
-      const res = await axios.get(`http://localhost:8080/incomingRequests/${userId}`);
-      setIncomingRequests(res.data);
-    } catch (e) {
-      console.error("Error fetching incoming requests:", e.message);
-    }
+  /* ================= CONNECTIONS ================= */
+  const fetchConnections = async () => {
+    const res = await axios.get(
+      `http://localhost:8080/connections/${userId}`
+    );
+    setConnections(res.data);
   };
 
-  // Send request
+  /* ================= SEND REQUEST ================= */
   const sendRequest = async (receiverId) => {
-    try {
-      await axios.post(`http://localhost:8080/request/${userId}/${receiverId}`, {
-        senderId: userId,
-        receiverId,
-      });
-      setSentRequests((prev) => [...prev, receiverId]);
-    } catch (err) {
-      alert(err.response?.data?.message || "Failed to send request.");
-    }
+    await axios.post(
+      `http://localhost:8080/send/${userId}/${receiverId}`
+    );
+    fetchUsers();
   };
 
-  // Accept request
+  /* ================= ACCEPT REQUEST ================= */
   const acceptRequest = async (senderId) => {
-    try {
-      await axios.post(`http://localhost:8080/accept/${senderId}/${userId}`, {
-        senderId,
-        receiverId: userId,
-      });
-      setIncomingRequests((prev) => prev.filter((r) => r.sender._id !== senderId));
-    } catch (err) {
-      alert(err.response?.data?.message || "Failed to accept request.");
-    }
+    await axios.post(
+      `http://localhost:8080/accept/${userId}/${senderId}`
+    );
+    loadAll();
   };
+
+  /* ================= IMAGE FALLBACK ================= */
+  const avatar = (img) =>
+    img
+      ? `http://localhost:8080/${img}`
+      : "https://via.placeholder.com/50";
 
   return (
     <>
       <Navbar />
       <div className="users-container">
-        <h2>Connection System</h2>
+        <h2>Connections</h2>
 
-        {/* ==== Available Users Section ==== */}
+        {/* ===== MY CONNECTIONS ===== */}
         <div className="section">
-          <h3>Available Users</h3>
-          <div className="users-list">
-            {users.map((user) => (
-              <div className="user-card" key={user._id}>
-                <Link to={`/profile/${user._id}`}>
-                  <span>@{user.username}</span>
-                </Link>
-                {sentRequests.includes(user._id) ? (
-                  <button disabled>Request Sent</button>
-                ) : (
-                  <button onClick={() => sendRequest(user._id)}>Send Request</button>
-                )}
-              </div>
-            ))}
-          </div>
+          <h3>My Connections</h3>
+
+          {connections.length === 0 ? (
+            <p>No connections</p>
+          ) : (
+            connections.map(c => {
+              const user =
+                c.sender._id === userId ? c.receiver : c.sender;
+
+              return (
+                <div className="user-card" key={c._id}>
+                  <img
+                    src={avatar(user.profilePic)}
+                    alt="profile"
+                    className="user-avatar"
+                  />
+                  <Link to={`/profile/${user._id}`}>
+                    @{user.username}
+                  </Link>
+                </div>
+              );
+            })
+          )}
         </div>
 
-        {/* ==== Incoming Requests Section ==== */}
+        {/* ===== AVAILABLE USERS ===== */}
+        <div className="section">
+          <h3>Available Users</h3>
+
+          {users.map(u => (
+            <div className="user-card" key={u._id}>
+              <img
+                src={avatar(u.profilePic)}
+                alt="profile"
+                className="user-avatar"
+              />
+              <Link to={`/profile/${u._id}`}>
+                @{u.username}
+              </Link>
+              <button onClick={() => sendRequest(u._id)}>
+                Send Request
+              </button>
+            </div>
+          ))}
+        </div>
+
+        {/* ===== INCOMING REQUESTS ===== */}
         <div className="section">
           <h3>Incoming Requests</h3>
-          <div className="users-list">
-            {incomingRequests.length === 0 ? (
-              <p>No incoming requests</p>
-            ) : (
-              incomingRequests.map((req) => (
-                <div className="user-card" key={req._id}>
-                  <span>@{req.sender.username}</span>
-                  <button onClick={() => acceptRequest(req.sender._id)}>Accept</button>
-                </div>
-              ))
-            )}
-          </div>
+
+          {incoming.length === 0 ? (
+            <p>No incoming requests</p>
+          ) : (
+            incoming.map(r => (
+              <div className="user-card" key={r._id}>
+                <img
+                  src={avatar(r.sender.profilePic)}
+                  alt="profile"
+                  className="user-avatar"
+                />
+                <span>@{r.sender.username}</span>
+                <button
+                  onClick={() => acceptRequest(r.sender._id)}
+                >
+                  Accept
+                </button>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </>

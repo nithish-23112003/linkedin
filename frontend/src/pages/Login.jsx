@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "../assets/authContext";
 import { Link, useNavigate } from "react-router-dom";
-import "bootstrap-icons/font/bootstrap-icons.css"
+import "bootstrap-icons/font/bootstrap-icons.css";
 
 export default function Login() {
   const { login } = useAuth();
@@ -20,11 +20,9 @@ export default function Login() {
 
     try {
       const success = await login(username, password);
-    
+
       if (success) {
-      
         navigate("/");
-        
       }
     } catch (e) {
       console.error("Login error:", e.message);
@@ -34,44 +32,53 @@ export default function Login() {
 
   return (
     <>
-    <div>
-        <i className="bi bi-linkedin"></i></div>
-      <form onSubmit={handleLogin}>
-        <div className="form-group">
-          <label>Email address</label>
-          <input
-            type="text"
-            className="form-control"
-            placeholder="Enter username"
-            required
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
-          <small className="form-text text-muted">
-            We'll never share your username with anyone else.
-          </small>
+      <div className="container d-flex justify-content-center align-items-center" style={{ height: "100vh" }}>
+        <div className="card p-4 shadow" style={{ width: "380px" }}>
+          
+          <div className="text-center mb-3">
+            <i className="bi bi-linkedin" style={{ fontSize: "40px", color: "#0a66c2" }}></i>
+          </div>
+
+          <h3 className="text-center mb-3">Login</h3>
+
+          <form onSubmit={handleLogin}>
+            <div className="form-group mb-3">
+              <label>Email address</label>
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Enter username"
+                required
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+              />
+              <small className="form-text text-muted">
+                We'll never share your username with anyone else.
+              </small>
+            </div>
+
+            <div className="form-group mb-3">
+              <label>Password</label>
+              <input
+                type="password"
+                className="form-control"
+                placeholder="Password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+
+            <p className="mt-2">
+              Don't have an account? <Link to="/signup">Sign up</Link>
+            </p>
+
+            <button type="submit" className="btn btn-primary w-100 mt-2">
+              Submit
+            </button>
+          </form>
         </div>
-
-        <div className="form-group">
-          <label>Password</label>
-          <input
-            type="password"
-            className="form-control"
-            placeholder="Password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </div>
-
-        <p>
-          Don't have an account? <Link to="/signup">Sign up</Link>
-        </p>
-
-        <button type="submit" className="btn btn-primary">
-          Submit
-        </button>
-      </form>
+      </div>
     </>
   );
 }

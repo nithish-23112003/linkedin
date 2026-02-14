@@ -8,6 +8,7 @@ const app=express();
 const User=require("./routes/userRouter")
 const Post=require("./routes/postRouter");
 const Comment=require("./routes/commentRouter");
+const connectionRouter=require("./routes/connectionrouter");
 app.use(express.json());
 app.use(cors());
 const main=async()=>{
@@ -17,7 +18,9 @@ const main=async()=>{
 app.use(User)
 app.use(Post);
 app.use(Comment);
+app.use(connectionRouter);
 app.use(express.static("/upload"));
+
 
 app.listen(PORT,(req,res)=>{
     console.log("Server is Learning in PORT",PORT);

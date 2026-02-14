@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { NavLink } from "react-router-dom";
 import "./Navbar.css";
 
 const Navbar = () => {
@@ -18,13 +19,16 @@ const Navbar = () => {
       <ul className="navbar-list">
         {navItems.map(({ name, label, href }) => (
           <li key={name} className="navbar-item">
-            <a
-              href={href}
-              className={`navbar-link ${active === name ? "active" : ""}`}
+            <NavLink
+              to={href}
+              end={href === "/"} /* ensures exact match for root */
+              className={({ isActive }) =>
+                `navbar-link ${isActive ? "active" : ""}`
+              }
               onClick={() => setActive(name)}
             >
               {label}
-            </a>
+            </NavLink>
           </li>
         ))}
       </ul>

@@ -1,5 +1,14 @@
 const multer = require("multer");
 const path = require("path");
+const fs = require("fs");
+
+const uploadDir = path.join(__dirname, "../uploads");
+
+// auto-create uploads folder
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir);
+}
+
 
 // Storage (to uploads folder temporarily)
 const storage = multer.diskStorage({
@@ -13,16 +22,31 @@ const storage = multer.diskStorage({
 
 // File filter to allow images only
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = /jpeg|jpg|png|gif/;
-  const ext = path.extname(file.originalname).toLowerCase();
-  const mime = file.mimetype;
+  if (!file) {
+    return cb(new Error("No file uploaded"), false);
+  }
 
-  if (allowedTypes.test(ext) && allowedTypes.test(mime)) {
+  const allowedMimeTypes = [
+    "image/jpeg",
+    "image/png",
+    "image/jpg",
+    "image/gif",
+    "image/webp", // IMPORTANT
+  ];
+
+  if (allowedMimeTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error("Only image files are allowed!"));
+    cb(
+      new Error(`Only image files are allowed! Received: ${file.mimetype}`),
+      false
+    );
   }
 };
+
+
+
+
 
 const upload = multer({
   storage,

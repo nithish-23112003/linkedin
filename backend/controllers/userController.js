@@ -60,71 +60,84 @@ const login=async(req,res)=>{
     }
 }
 
-const userEducation=async(req,res)=>{
-    const {school,degree,college}=req.body;
-     const {userId}=req.params;
-    const name=school.name;
-    const year=school.year;
-    const dname=degree.dname;
-    const dyear=degree.dyear;
-    const dmarks=degree.dmarks;
-    const cname=college.cname;
-    const cmarks=college.cmarks;
-    const cyear=college.cyear;
-    const marks=school.marks;
-    try{
-        const user=await User.findById(userId);
-        if(!user) return res.json({message:"user not found"});
-        const school={name,year,marks};
-        const college={cname,cyear,cmarks};
-        const degree={dname,dyear,dmarks};
-        const educ=new Education({
-            school,
-            college,
-            degree,
-        });
-        await educ.save();
-        await User.findByIdAndUpdate(user._id,{$set:{education:educ}});
-        return res.json({message:"Studies are saved",educ})
-
-    }catch(e){
-        console.log("error during eduction",e.message);
-        return res.json({error:e.message});
-    }
-}
-
-const createWork = async (req, res) => {
-  const { token, present } = req.body;  // present should contain pcompany and pposition
+const userEducation = async (req, res) => {
+  const { school, college, degree } = req.body;
   const { userId } = req.params;
 
   try {
-    // Find the user by userId and populate the work field
+    const user = await User.findById(userId);
+    if (!user) return res.json({ message: "User not found" });
+
+    // prevent duplicate education
+    if (user.education) {
+      return res.json({ message: "Education already added" });
+    }
+
+    const educ = new Education({
+      school: {
+        name: school.name,
+        year: school.year,
+        marks: school.marks,
+      },
+      college: {
+        cname: college.cname,
+        cyear: college.cyear,
+        cmarks: college.cmarks,
+      },
+      degree: {
+        dname: degree.dname,
+        dyear: degree.dyear,
+        dmarks: degree.dmarks,
+      },
+    });
+
+    await educ.save();
+
+    user.education = educ._id;
+    await user.save();
+
+    return res.json({
+      message: "Studies are saved",
+      education: educ,
+    });
+  } catch (e) {
+    console.log("Education error:", e.message);
+    return res.status(500).json({ error: e.message });
+  }
+};
+
+const createWork = async (req, res) => {
+  const { token, present } = req.body;  
+  const { userId } = req.params;
+
+  try {
+    
     console.log(present);
     const user = await User.findById(userId).populate("work");
     if (!user) return res.json({ message: "User not found" });
 
-    // Check if the user already has a work record
+    
     let workRecord1 = await Work.findOne({ userId: userId });
     if (workRecord1) {
-      // If work record exists, update the present field
+      
       workRecord1 = await Work.findByIdAndUpdate(workRecord1._id, { $set: { present: present } }, { new: true });
     } else {
-      // If no work record exists, create a new one
+      
       workRecord1 = new Work({
         userId: user._id,
-        present: present,  // Save the present field here
+        present: present,  
       });
       await workRecord1.save();
     }
 
-    // Push the work record's _id to the user's work array
+  
     user.work.push(workRecord1._id);
-    await user.save();  // Save the updated user document
+    await user.save();  
 
-    // Fetch the updated user document with populated work
+    
     const updatedUser = await User.findById(user._id).populate("work");
 
-    // Respond with the success message and updated data
+    
     return res.json({
       message: "Present Work is saved and added to the User",
       user: updatedUser,
@@ -151,7 +164,6 @@ const addWork = async (req, res) => {
     let workRecord = await Work.findOne({ userId: userId });
 
     if (workRecord) {
-      // Push all pastworks sent from frontend
       workRecord.pastworks.push(...pastworks);
     } else {
       workRecord = new Work({
@@ -198,7 +210,7 @@ const fetchUser = async (req, res) => {
       username:user.username,
       education: user.education,
       work: user.work, 
-      // if 'work' is an array field, adjust accordingly
+      
     });
   } catch (error) {
     console.error('Error fetching user:', error.message);
@@ -221,7 +233,7 @@ const updateProfile = async (req, res) => {
       return res.status(400).json({ message: "No image file uploaded" });
     }
 
-    // Upload to Cloudinary
+   
     const result = await cloudinary.uploader.upload(req.file.path, {
       folder: "user_profiles", 
     });
@@ -229,7 +241,7 @@ const updateProfile = async (req, res) => {
   
     fs.unlinkSync(req.file.path);
 
-   // Save URL to user profile
+
     await user.updateOne({ profile: result.secure_url });
 
     return res.status(200).json({
@@ -382,70 +394,70 @@ const DownloadResume = async (req, res) => {
   }
 };
 
-// POST /api/connections/request
-const sentRequest=async (req, res) => {
-  const { senderId, receiverId } = req.body;
 
-  try {
-    // Prevent duplicate requests
-    const exists = await Connection.findOne({
-      sender: senderId,
-      receiver: receiverId,
-      status: 'pending'
-    });
+// const sentRequest=async (req, res) => {
+//   const { senderId, receiverId } = req.body;
 
-    if (exists) {
-      return res.status(400).json({ message: 'Request already sent' });
-    }
+//   try {
+    
+//     const exists = await Connection.findOne({
+//       sender: senderId,
+//       receiver: receiverId,
+//       status: 'pending'
+//     });
 
-    const connection = new Connection({ sender: senderId, receiver: receiverId });
-    await connection.save();
+//     if (exists) {
+//       return res.status(400).json({ message: 'Request already sent' });
+//     }
 
-    res.status(201).json({ message: 'Request sent successfully' });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-}
+//     const connection = new Connection({ sender: senderId, receiver: receiverId });
+//     await connection.save();
 
-const getAllRequest= async (req, res) => {
-  try {
-    const sentRequests = await Connection.find({ sender: req.params.userId, status: 'pending' })
-      .populate('receiver', 'name email');
+//     res.status(201).json({ message: 'Request sent successfully' });
+//   } catch (err) {
+//     res.status(500).json({ error: err.message });
+//   }
+// }
 
-    res.status(200).json(sentRequests);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-}
+// const getAllRequest= async (req, res) => {
+//   try {
+//     const sentRequests = await Connection.find({ sender: req.params.userId, status: 'pending' })
+//       .populate('receiver', 'name email');
 
-const acceptRequest= async (req, res) => {
-  const { senderId, receiverId } = req.body;
+//     res.status(200).json(sentRequests);
+//   } catch (err) {
+//     res.status(500).json({ error: err.message });
+//   }
+// }
 
-  try {
-    const connection = await Connection.findOne({
-      sender: senderId,
-      receiver: receiverId,
-      status: 'pending'
-    });
+// const acceptRequest= async (req, res) => {
+//   const { senderId, receiverId } = req.body;
 
-    if (!connection) {
-      return res.status(404).json({ message: 'Request not found' });
-    }
+//   try {
+//     const connection = await Connection.findOne({
+//       sender: senderId,
+//       receiver: receiverId,
+//       status: 'pending'
+//     });
 
-    connection.status = 'accepted';
-    await connection.save();
+//     if (!connection) {
+//       return res.status(404).json({ message: 'Request not found' });
+//     }
 
-    res.status(200).json({ message: 'Request accepted' });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-}
+//     connection.status = 'accepted';
+//     await connection.save();
 
-
+//     res.status(200).json({ message: 'Request accepted' });
+//   } catch (err) {
+//     res.status(500).json({ error: err.message });
+//   }
+// }
 
 
 
 
 
-module.exports={signup,login,userEducation,createWork,addWork,fetchUser,fetchAllUsers,updateProfile,DownloadResume,sentRequest,getAllRequest,acceptRequest
+
+
+module.exports={signup,login,userEducation,createWork,addWork,fetchUser,fetchAllUsers,updateProfile,DownloadResume
 }

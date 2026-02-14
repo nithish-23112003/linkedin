@@ -20,7 +20,7 @@ export default function CreatePost() {
 
     const formData = new FormData();
     formData.append("file", image);
-    formData.append("upload_preset", "linkedin"); // Your Cloudinary preset here
+    formData.append("upload_preset", "linkedin"); 
 
     try {
       setUploading(true);

@@ -76,47 +76,55 @@ export default function Home() {
   };
 
   return (
-   <div><Navbar />
-    <div className="posts-container">
-      {posts.length === 0 ? (
-        <p>No posts to display</p>
-      ) : (
-        posts.map((post) => {
-          const liked = likedPosts.has(post._id);
-          return (
-            <Link to={`/post/${post._id}`} className="post-link" key={post._id}>
-              <div className="post-card">
-                <div className="post-header">
-                  <h3>{post.userId?.name || "Unknown User"}</h3>
-                  <span className="post-time">
-                    {new Date(post.createdAt).toLocaleString()}
-                  </span>
-                </div>
+   <div>
+     <Navbar />
 
-                <img
-                  src={post.imageUrl || "https://placehold.co/600x300?text=Post+Image"}
-                  alt="Post"
-                  className="post-image"
-                  style={{height:"200px",width:"500px"}}
-                />
+     {/* Create Post button (goes to /post/create) */}
+     <Link to="/post/create" className="create-post-btn" aria-label="Create Post">
+       <i className="bi bi-plus-lg"></i>
+       <span className="create-text">Create Post</span>
+     </Link>
 
-                <p className="post-body">{post.body}</p>
+     <div className="posts-container">
+       {posts.length === 0 ? (
+         <p>No posts to display</p>
+       ) : (
+         posts.map((post) => {
+           const liked = likedPosts.has(post._id);
+           return (
+             <Link to={`/post/${post._id}`} className="post-link" key={post._id}>
+               <div className="post-card">
+                 <div className="post-header">
+                   <h3>{post.userId?.name || "Unknown User"}</h3>
+                   <span className="post-time">
+                     {new Date(post.createdAt).toLocaleString()}
+                   </span>
+                 </div>
 
-                <div className="post-footer">
-                  <button
-                    onClick={() => handleLike(post._id)}
-                    className={`like-button ${liked ? "liked" : ""}`}
-                  >
-                    <i className={`bi bi-heart${liked ? "-fill" : ""}`}></i>
-                  </button>
-                  <span>{post.likes} Likes</span>
-                </div>
-              </div>
-            </Link>
-          );
-        })
-      )}
-    </div>
-    </div>
+                 <img
+                   src={post.imageUrl || "https://placehold.co/600x300?text=Post+Image"}
+                   alt="Post"
+                   className="post-image"
+                   style={{height:"200px",width:"500px"}}
+                 />
+
+                 <p className="post-body">{post.body}</p>
+
+                 <div className="post-footer">
+                   <button
+                     onClick={() => handleLike(post._id)}
+                     className={`like-button ${liked ? "liked" : ""}`}
+                   >
+                     <i className={`bi bi-heart${liked ? "-fill" : ""}`}></i>
+                   </button>
+                   <span>{post.likes} Likes</span>
+                 </div>
+               </div>
+             </Link>
+           );
+         })
+       )}
+     </div>
+   </div>
   );
 }

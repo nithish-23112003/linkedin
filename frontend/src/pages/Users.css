@@ -15,6 +15,24 @@
 }
 
 .user-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border-radius: 8px;
+  background: #f9f9f9;
+  margin-bottom: 10px;
+}
+
+.user-avatar {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+
+.user-card {
   border: 1px solid #ddd;
   padding: 15px;
   border-radius: 8px;
